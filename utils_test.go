@@ -14,6 +14,7 @@ var (
 func TestStringProperties(t *testing.T) {
 	type Expectant struct {
 		Label        string
+		ExpectLabels []string
 		ExpectSingle *string
 		ExpectMulti  map[string][]string
 		ExpectMeta   map[string]map[string][]string
@@ -22,7 +23,7 @@ func TestStringProperties(t *testing.T) {
 	givens := []Vertex{
 		// test no properties
 		{Type: "g:Vertex",
-			Value: VertexValue{ID: "test-id1", Label: "lable"},
+			Value: VertexValue{ID: "test-id1", Label: "lable1::lable2"},
 		},
 		// test single property
 		{Type: "g:Vertex",
@@ -78,18 +79,23 @@ func TestStringProperties(t *testing.T) {
 		},
 	}
 	expecteds := []Expectant{
-		{Label: "tZero"},
+		{Label: "tZero",
+			ExpectLabels: []string{"lable1", "lable2"},
+		},
 		{Label: "tSimple",
+			ExpectLabels: []string{`lable`},
 			ExpectSingle: &exStr["tSimple"][0],
 			ExpectMulti:  map[string][]string{p: exStr["tSimple"]},
 			ExpectMeta:   map[string]map[string][]string{p: map[string][]string{p: exStr["tSimple"]}},
 		},
 		{Label: "tMulti",
+			ExpectLabels: []string{`lable`},
 			ExpectSingle: nil,
 			ExpectMulti:  map[string][]string{p: exStr["tMulti"]},
 			ExpectMeta:   map[string]map[string][]string{p: map[string][]string{p: exStr["tMulti"]}},
 		},
 		{Label: "tMeta",
+			ExpectLabels: []string{`lable`},
 			ExpectSingle: nil,
 			ExpectMulti:  nil,
 			ExpectMeta:   map[string]map[string][]string{p: map[string][]string{p + "1": exStr["tMeta"][0:1], p + "2": exStr["tMeta"][1:2]}},
@@ -97,8 +103,14 @@ func TestStringProperties(t *testing.T) {
 	}
 
 	for i, given := range givens {
+		expected := expecteds[i]
+
+		Convey("Test String Labels: "+expecteds[i].Label, t, func() {
+			gotLabels := given.GetLabels()
+			So(gotLabels, ShouldResemble, expected.ExpectLabels)
+		})
+
 		Convey("Test String Props: "+expecteds[i].Label, t, func() {
-			expected := expecteds[i]
 			_, err := given.GetMultiProperty("not-there")
 			So(err, ShouldEqual, ErrorPropertyNotFound)
 

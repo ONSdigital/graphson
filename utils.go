@@ -19,11 +19,11 @@ func (v Vertex) GetID() string {
 
 // GetLabels returns the []string labels for the given vertex
 func (v Vertex) GetLabels() (labels []string) {
-	labels[0] = v.Value.Label
-	if strings.Index(labels[0], "//") == -1 {
+	labels = append(labels, v.Value.Label)
+	if strings.Index(labels[0], "::") == -1 {
 		return
 	}
-	return strings.Split(labels[0], "//")
+	return strings.Split(labels[0], "::")
 }
 
 // GetLabel returns the string label for the given vertex, or an error if >1
