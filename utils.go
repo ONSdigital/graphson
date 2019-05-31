@@ -74,6 +74,19 @@ func (v Vertex) GetMultiPropertyInt64(key string) (vals []int64, err error) {
 	return
 }
 
+// GetMultiPropertyInt32 returns the ([]int32) values for the given property `key`
+// will return an error if the property is not the correct type
+func (v Vertex) GetMultiPropertyInt32(key string) (vals []int32, err error) {
+	var valsInterface []interface{}
+	if valsInterface, err = v.GetMultiPropertyAs(key, "int32"); err != nil {
+		return
+	}
+	for _, val := range valsInterface {
+		vals = append(vals, val.(int32))
+	}
+	return
+}
+
 // getMultiPropertyAs returns the values for the given property `key` as type `wantType`
 // will return an error if the property is not a set of the given `wantType` (string, bool, int64)
 func (v Vertex) GetMultiPropertyAs(key, wantType string) (vals []interface{}, err error) {
@@ -104,6 +117,19 @@ func (v Vertex) GetMultiPropertyAs(key, wantType string) (vals []interface{}, er
 				return
 			}
 			vals = append(vals, val)
+		case "int32":
+			var typeIf, valIf interface{}
+			if typeIf, ok = prop.Value.Value.(map[string]interface{})["@type"]; !ok || typeIf != "g:Int32" {
+				return vals, ErrorUnexpectedPropertyType
+			}
+			if valIf, ok = prop.Value.Value.(map[string]interface{})["@value"]; !ok {
+				return vals, ErrorUnexpectedPropertyType
+			}
+			var val float64
+			if val, ok = valIf.(float64); !ok {
+				return vals, ErrorUnexpectedPropertyType
+			}
+			vals = append(vals, int32(val))
 		case "int64":
 			var val int64
 			if val, ok = prop.Value.Value.(int64); !ok {
@@ -123,6 +149,10 @@ func (v Vertex) GetProperty(key string) (val string, err error) {
 	if vals, err = v.GetMultiProperty(key); err != nil {
 		return
 	}
+	if len(vals) == 0 {
+		err = ErrorPropertyNotFound
+		return
+	}
 	if len(vals) > 1 {
 		err = ErrorPropertyIsMulti
 		return
@@ -137,6 +167,10 @@ func (v Vertex) GetPropertyInt64(key string) (val int64, err error) {
 	if valsInterface, err = v.GetMultiPropertyAs(key, "int64"); err != nil {
 		return
 	}
+	if len(valsInterface) == 0 {
+		err = ErrorPropertyNotFound
+		return
+	}
 	if len(valsInterface) > 1 {
 		err = ErrorPropertyIsMulti
 		return
@@ -144,11 +178,33 @@ func (v Vertex) GetPropertyInt64(key string) (val int64, err error) {
 	return valsInterface[0].(int64), nil
 }
 
+// GetPropertyInt32 returns the single int32 value for a given property `key`
+// will return an error if the property is not a single string
+func (v Vertex) GetPropertyInt32(key string) (val int32, err error) {
+	var valsInterface []interface{}
+	if valsInterface, err = v.GetMultiPropertyAs(key, "int32"); err != nil {
+		return
+	}
+	if len(valsInterface) == 0 {
+		err = ErrorPropertyNotFound
+		return
+	}
+	if len(valsInterface) > 1 {
+		err = ErrorPropertyIsMulti
+		return
+	}
+	return valsInterface[0].(int32), nil
+}
+
 // GetPropertyBool returns the single bool value for a given property `key`
 // will return an error if the property is not a single string
 func (v Vertex) GetPropertyBool(key string) (val bool, err error) {
 	var valsInterface []interface{}
 	if valsInterface, err = v.GetMultiPropertyAs(key, "bool"); err != nil {
+		return
+	}
+	if len(valsInterface) == 0 {
+		err = ErrorPropertyNotFound
 		return
 	}
 	if len(valsInterface) > 1 {

@@ -18,6 +18,8 @@ func TestStringProperties(t *testing.T) {
 		ExpectSingle *string
 		ExpectMulti  map[string][]string
 		ExpectMeta   map[string]map[string][]string
+		ExpectInt32  map[string][]int32
+		ExpectBool   map[string][]bool
 	}
 	exStr := map[string][]string{"tSimple": {"tSimple"}, "tMulti": {"tMulti1", "tMulti2"}, "tMeta": {"tMeta1", "tMeta2"}}
 	givens := []Vertex{
@@ -33,6 +35,20 @@ func TestStringProperties(t *testing.T) {
 						{Type: "g:VertexProperty",
 							Value: VertexPropertyValue{ID: genericID, Label: p,
 								Value: exStr["tSimple"][0],
+							},
+						},
+					},
+					"counter": {
+						{Type: "g:VertexProperty",
+							Value: VertexPropertyValue{ID: genericID, Label: "counter",
+								Value: map[string]interface{}{"@type": "g:Int32", "@value": float64(1234)},
+							},
+						},
+					},
+					"George": {
+						{Type: "g:VertexProperty",
+							Value: VertexPropertyValue{ID: genericID, Label: "George",
+								Value: true,
 							},
 						},
 					},
@@ -86,19 +102,21 @@ func TestStringProperties(t *testing.T) {
 			ExpectLabels: []string{`lable`},
 			ExpectSingle: &exStr["tSimple"][0],
 			ExpectMulti:  map[string][]string{p: exStr["tSimple"]},
-			ExpectMeta:   map[string]map[string][]string{p: map[string][]string{p: exStr["tSimple"]}},
+			ExpectMeta:   map[string]map[string][]string{p: {p: exStr["tSimple"]}},
+			ExpectInt32:  map[string][]int32{"counter": {1234}},
+			ExpectBool:   map[string][]bool{"George": {true}},
 		},
 		{Label: "tMulti",
 			ExpectLabels: []string{`lable`},
 			ExpectSingle: nil,
 			ExpectMulti:  map[string][]string{p: exStr["tMulti"]},
-			ExpectMeta:   map[string]map[string][]string{p: map[string][]string{p: exStr["tMulti"]}},
+			ExpectMeta:   map[string]map[string][]string{p: {p: exStr["tMulti"]}},
 		},
 		{Label: "tMeta",
 			ExpectLabels: []string{`lable`},
 			ExpectSingle: nil,
 			ExpectMulti:  nil,
-			ExpectMeta:   map[string]map[string][]string{p: map[string][]string{p + "1": exStr["tMeta"][0:1], p + "2": exStr["tMeta"][1:2]}},
+			ExpectMeta:   map[string]map[string][]string{p: {p + "1": exStr["tMeta"][0:1], p + "2": exStr["tMeta"][1:2]}},
 		},
 	}
 
@@ -127,7 +145,6 @@ func TestStringProperties(t *testing.T) {
 				So(gotVal, ShouldEqual, *expected.ExpectSingle)
 			}
 
-			// if expected.ExpectMulti == nil {
 			for key, expectedVals := range expected.ExpectMulti {
 				gotVals, err := given.GetMultiProperty(key)
 				So(err, ShouldBeNil)
@@ -138,6 +155,18 @@ func TestStringProperties(t *testing.T) {
 				gotMap, err := given.GetMetaProperty(key)
 				So(err, ShouldBeNil)
 				So(gotMap, ShouldResemble, expectedVals)
+			}
+
+			for key, expectedVals := range expected.ExpectInt32 {
+				gotVals, err := given.GetMultiPropertyInt32(key)
+				So(err, ShouldBeNil)
+				So(gotVals, ShouldResemble, expectedVals)
+			}
+
+			for key, expectedVals := range expected.ExpectBool {
+				gotVals, err := given.GetMultiPropertyBool(key)
+				So(err, ShouldBeNil)
+				So(gotVals, ShouldResemble, expectedVals)
 			}
 		})
 
