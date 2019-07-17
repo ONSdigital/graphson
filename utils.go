@@ -131,12 +131,18 @@ func (v Vertex) GetMultiPropertyAs(key, wantType string) (vals []interface{}, er
 			}
 			vals = append(vals, int32(val))
 		case "int64":
-			var val int64
-			if val, ok = prop.Value.Value.(int64); !ok {
-				err = ErrorUnexpectedPropertyType
-				return
+			var typeIf, valIf interface{}
+			if typeIf, ok = prop.Value.Value.(map[string]interface{})["@type"]; !ok || typeIf != "g:Int64" {
+				return vals, ErrorUnexpectedPropertyType
 			}
-			vals = append(vals, val)
+			if valIf, ok = prop.Value.Value.(map[string]interface{})["@value"]; !ok {
+				return vals, ErrorUnexpectedPropertyType
+			}
+			var val float64
+			if val, ok = valIf.(float64); !ok {
+				return vals, ErrorUnexpectedPropertyType
+			}
+			vals = append(vals, int64(val))
 		}
 	}
 	return

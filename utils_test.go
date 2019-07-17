@@ -19,6 +19,7 @@ func TestStringProperties(t *testing.T) {
 		ExpectMulti  map[string][]string
 		ExpectMeta   map[string]map[string][]string
 		ExpectInt32  map[string][]int32
+		ExpectInt64  map[string][]int64
 		ExpectBool   map[string][]bool
 	}
 	exStr := map[string][]string{"tSimple": {"tSimple"}, "tMulti": {"tMulti1", "tMulti2"}, "tMeta": {"tMeta1", "tMeta2"}}
@@ -42,6 +43,13 @@ func TestStringProperties(t *testing.T) {
 						{Type: "g:VertexProperty",
 							Value: VertexPropertyValue{ID: genericID, Label: "counter",
 								Value: map[string]interface{}{"@type": "g:Int32", "@value": float64(1234)},
+							},
+						},
+					},
+					"big-counter": {
+						{Type: "g:VertexProperty",
+							Value: VertexPropertyValue{ID: genericID, Label: "big-counter",
+								Value: map[string]interface{}{"@type": "g:Int64", "@value": float64(1234)},
 							},
 						},
 					},
@@ -104,6 +112,7 @@ func TestStringProperties(t *testing.T) {
 			ExpectMulti:  map[string][]string{p: exStr["tSimple"]},
 			ExpectMeta:   map[string]map[string][]string{p: {p: exStr["tSimple"]}},
 			ExpectInt32:  map[string][]int32{"counter": {1234}},
+			ExpectInt64:  map[string][]int64{"big-counter": {1234}},
 			ExpectBool:   map[string][]bool{"George": {true}},
 		},
 		{Label: "tMulti",
@@ -159,6 +168,12 @@ func TestStringProperties(t *testing.T) {
 
 			for key, expectedVals := range expected.ExpectInt32 {
 				gotVals, err := given.GetMultiPropertyInt32(key)
+				So(err, ShouldBeNil)
+				So(gotVals, ShouldResemble, expectedVals)
+			}
+
+			for key, expectedVals := range expected.ExpectInt64 {
+				gotVals, err := given.GetMultiPropertyInt64(key)
 				So(err, ShouldBeNil)
 				So(gotVals, ShouldResemble, expectedVals)
 			}
