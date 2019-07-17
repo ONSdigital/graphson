@@ -87,7 +87,7 @@ func (v Vertex) GetMultiPropertyInt32(key string) (vals []int32, err error) {
 	return
 }
 
-// getMultiPropertyAs returns the values for the given property `key` as type `wantType`
+// GetMultiPropertyAs returns the values for the given property `key` as type `wantType`
 // will return an error if the property is not a set of the given `wantType` (string, bool, int64)
 func (v Vertex) GetMultiPropertyAs(key, wantType string) (vals []interface{}, err error) {
 	var valInterface []VertexProperty
