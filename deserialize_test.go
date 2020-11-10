@@ -2,6 +2,7 @@ package graphson
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
 	"testing"
 
@@ -11,7 +12,11 @@ import (
 func TestDeserializeVertices(t *testing.T) {
 	givens := []string{
 		// test empty response
+		``,
+		// test empty array response
 		`[]`,
+		// test null response
+		`null`,
 		// test single vertex, single property
 		`[{"@type":"g:Vertex","@value":{"id":"test-id","label":"label","properties":{"health":[{"@type":"g:VertexProperty","@value":{"id":{"@type":"Type","@value": 1},"value":"1","label":"health"}}]}}}]`,
 		// test two vertices, single property
@@ -22,6 +27,8 @@ func TestDeserializeVertices(t *testing.T) {
 		`[{"@type":"g:Vertex","@value":{"id":"test-id","label":"label","properties":{"health":[{"@type":"g:VertexProperty","@value":{"id":{"@type":"Type","@value": 1},"value":"1","label":"health"}}, {"@type":"g:VertexProperty","@value":{"id":{"@type":"Type","@value": 1},"value":"2","label":"health"}}]}}}]`,
 	}
 	expecteds := [][]Vertex{
+		{},
+		{},
 		{},
 		{MakeDummyVertex("test-id", "label", map[string]interface{}{"health": 1})},
 		{MakeDummyVertex("test-id", "label", map[string]interface{}{"health": 1}), MakeDummyVertex("test-id2", "label", map[string]interface{}{"health": 1})},
@@ -60,7 +67,11 @@ func TestDeserializeEdges(t *testing.T) {
 	// }
 	givens := []string{
 		// test empty response
+		``,
+		// test empty array response
 		`[]`,
+		// test null response
+		`null`,
 		// test single edge, single property
 		`[{"@type":"g:Edge","@value":{"id":"101","label":"label","inVLabel":"inVLabel","outVLabel":"outVLabel","inV":"11","outV":"22","properties":{"test":{"@type":"g:Property","@value":{"key":"test","value":{"@type":"g:Int32", "@value": 3}}}}}}]`,
 		// test two edges, single property
@@ -71,6 +82,8 @@ func TestDeserializeEdges(t *testing.T) {
 		`[{"@type":"g:Edge","@value":{"id":"103","label":"label","inVLabel":"inVLabel","outVLabel":"outVLabel","inV":"11","outV":"22","properties":{"test":{"@type":"g:Property","@value":{"key":"test","value":{"@type":"g:Int32", "@value": 3}}}, "test2":{"@type":"g:Property","@value":{"key":"test2","value":{"@type":"g:Int32", "@value": 3}}}}}}]`,
 	}
 	expecteds := []Edges{
+		{},
+		{},
 		{},
 		{MakeDummyEdge(101, "label", "inVLabel", "outVLabel", "11", "22", map[string]int32{"test": 3})},
 		{MakeDummyEdge(102, "label", "inVLabel", "outVLabel", "11", "22", map[string]int32{"test": 3}), MakeDummyEdge(1021, "label", "inVLabel", "outVLabel", "111", "222", map[string]int32{"test": 31})},
@@ -104,7 +117,11 @@ func TestDeserializeEdges(t *testing.T) {
 func TestDeserializeGenericValues(t *testing.T) {
 	givens := []string{
 		// test empty response
+		``,
+		// test empty array response
 		`[]`,
+		// test null response
+		`null`,
 		// test single gv, core return type
 		`[{"@type":"generic1", "@value": 1}]`,
 		// test 2 gv, core return type
@@ -115,6 +132,8 @@ func TestDeserializeGenericValues(t *testing.T) {
 		`[{"@type":"generic4", "@value": {"test": {"test": "test"}}}]`,
 	}
 	expecteds := [][]GenericValue{
+		{},
+		{},
 		{},
 		{MakeDummyGenericValue("generic1", 1)},
 		{MakeDummyGenericValue("generic2.1", 21), MakeDummyGenericValue("generic2.2", "test")},
@@ -142,7 +161,11 @@ func TestDeserializeGenericValues(t *testing.T) {
 func TestDeserializeGenericValue(t *testing.T) {
 	givens := []string{
 		// test empty response
+		``,
+		// test empty object response
 		`{}`,
+		// test null response
+		`null`,
 		// test single gv, core return type
 		`{"@type":"generic1", "@value": 1}`,
 		// // test single gv, map return type
@@ -151,6 +174,8 @@ func TestDeserializeGenericValue(t *testing.T) {
 		`{"@type":"generic3", "@value": {"test": {"test": "test"}}}`,
 	}
 	expecteds := []GenericValue{
+		{},
+		{},
 		{},
 		MakeDummyGenericValue("generic1", 1),
 		MakeDummyGenericValue("generic2", map[string]string{"test": "test1"}),
@@ -293,6 +318,47 @@ func TestConvertToCleanEdges(t *testing.T) {
 	}
 }
 
+func TestDeserializeStringListFromBytes(t *testing.T) {
+	type args struct {
+		rawResponse []byte
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []string
+		wantErr bool
+	}{
+		{
+			name: "Empty response returns empty array",
+			args: args{
+				rawResponse: []byte(""),
+			},
+			want:    []string{},
+			wantErr: false,
+		},
+		{
+			name: "Null response returns empty array",
+			args: args{
+				rawResponse: []byte("null"),
+			},
+			want:    []string{},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotVals, err := DeserializeStringListFromBytes(tt.args.rawResponse)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DeserializeStringListFromBytes() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotVals, tt.want) {
+				t.Errorf("DeserializeStringListFromBytes() gotVals = %v, want %v", gotVals, tt.want)
+			}
+		})
+	}
+}
+
 func TestDecode(t *testing.T) {
 	for _, jsTest := range jsonTests {
 		Convey("Test "+jsTest.label, t, func() {
@@ -413,4 +479,151 @@ var jsonTests = []testJSON{
 		hasLen:    2,
 		parseType: "edge",
 	},
+}
+
+func TestDeserializeListOfVerticesFromBytes(t *testing.T) {
+	type args struct {
+		rawResponse []byte
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []Vertex
+		wantErr bool
+	}{
+		{
+			name: "Empty response returns empty array",
+			args: args{
+				rawResponse: []byte(""),
+			},
+			want:    []Vertex{},
+			wantErr: false,
+		},
+		{
+			name: "Null response returns empty array",
+			args: args{
+				rawResponse: []byte("null"),
+			},
+			want:    []Vertex{},
+			wantErr: false,
+		},
+		{
+			name: "Empty array response returns empty array",
+			args: args{
+				rawResponse: []byte("null"),
+			},
+			want:    []Vertex{},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := DeserializeListOfVerticesFromBytes(tt.args.rawResponse)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DeserializeListOfVerticesFromBytes() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("DeserializeListOfVerticesFromBytes() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDeserializeListOfEdgesFromBytes(t *testing.T) {
+	type args struct {
+		rawResponse []byte
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    Edges
+		wantErr bool
+	}{
+		{
+			name: "Empty response returns empty array",
+			args: args{
+				rawResponse: []byte(""),
+			},
+			want:    Edges{},
+			wantErr: false,
+		},
+		{
+			name: "Null response returns empty array",
+			args: args{
+				rawResponse: []byte("null"),
+			},
+			want:    Edges{},
+			wantErr: false,
+		},
+		{
+			name: "Empty array response returns empty array",
+			args: args{
+				rawResponse: []byte("null"),
+			},
+			want:    Edges{},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := DeserializeListOfEdgesFromBytes(tt.args.rawResponse)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DeserializeListOfEdgesFromBytes() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("DeserializeListOfEdgesFromBytes() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDeserializeMapFromBytes(t *testing.T) {
+	type args struct {
+		rawResponse []byte
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    map[string]interface{}
+		wantErr bool
+	}{
+		{
+			name: "Empty response returns empty array",
+			args: args{
+				rawResponse: []byte(""),
+			},
+			want:    map[string]interface{}{},
+			wantErr: false,
+		},
+		{
+			name: "Null response returns empty array",
+			args: args{
+				rawResponse: []byte("null"),
+			},
+			want:    map[string]interface{}{},
+			wantErr: false,
+		},
+		{
+			name: "Empty array response returns empty array",
+			args: args{
+				rawResponse: []byte("null"),
+			},
+			want:    map[string]interface{}{},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotResMap, err := DeserializeMapFromBytes(tt.args.rawResponse)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DeserializeMapFromBytes() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotResMap, tt.want) {
+				t.Errorf("DeserializeMapFromBytes() gotResMap = %v, want %v", gotResMap, tt.want)
+			}
+		})
+	}
 }

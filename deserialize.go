@@ -35,11 +35,14 @@ func DeserializeVerticesFromBytes(rawResponse []byte) ([]Vertex, error) {
 
 // DeserializeListOfVerticesFromBytes returns a slice of Vertex from the graphson rawResponse g:List of vertex
 func DeserializeListOfVerticesFromBytes(rawResponse []byte) ([]Vertex, error) {
+
+	if isEmptyResponse(rawResponse) {
+		return []Vertex{}, nil
+	}
+
 	var metaResponse ListVertices
 	var response []Vertex
-	if len(rawResponse) == 0 {
-		return response, nil
-	}
+
 	dec := json.NewDecoder(bytes.NewReader(rawResponse))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&metaResponse); err != nil {
@@ -54,11 +57,14 @@ func DeserializeListOfVerticesFromBytes(rawResponse []byte) ([]Vertex, error) {
 }
 
 func DeserializeListOfEdgesFromBytes(rawResponse []byte) (Edges, error) {
+
+	if isEmptyResponse(rawResponse) {
+		return Edges{}, nil
+	}
+
 	var metaResponse ListEdges
 	var response Edges
-	if len(rawResponse) == 0 {
-		return response, nil
-	}
+
 	dec := json.NewDecoder(bytes.NewReader(rawResponse))
 	dec.DisallowUnknownFields()
 	err := dec.Decode(&metaResponse)
@@ -74,10 +80,13 @@ func DeserializeListOfEdgesFromBytes(rawResponse []byte) (Edges, error) {
 }
 
 func DeserializeMapFromBytes(rawResponse []byte) (resMap map[string]interface{}, err error) {
-	var metaResponse GList
-	if len(rawResponse) == 0 {
-		return
+
+	if isEmptyResponse(rawResponse) {
+		return map[string]interface{}{}, nil
 	}
+
+	var metaResponse GList
+
 	dec := json.NewDecoder(bytes.NewReader(rawResponse))
 	dec.DisallowUnknownFields()
 	if err = dec.Decode(&metaResponse); err != nil {
@@ -124,13 +133,16 @@ func DeserializePropertiesFromBytes(rawResponse []byte, resMap map[string][]inte
 
 // DeserializeStringListFromBytes get a g:List value which should be a a list of strings, return those
 func DeserializeStringListFromBytes(rawResponse []byte) (vals []string, err error) {
-	var metaResponse GList
-	if len(rawResponse) == 0 {
-		err = errors.New("DeserializeStringListFromBytes: nothing to decode")
+
+	if isEmptyResponse(rawResponse) {
+		vals = []string{}
 		return
 	}
+
 	dec := json.NewDecoder(bytes.NewReader(rawResponse))
 	dec.DisallowUnknownFields()
+
+	var metaResponse GList
 	if err = dec.Decode(&metaResponse); err != nil {
 		return
 	}
@@ -246,4 +258,12 @@ func ConvertToCleanEdges(edges Edges) []CleanEdge {
 		})
 	}
 	return responseEdges
+}
+
+func isEmptyResponse(rawResponse []byte) bool {
+	return len(rawResponse) == 0 || isNullResponse(rawResponse)
+}
+
+func isNullResponse(rawResponse []byte) bool {
+	return len(rawResponse) == 4 && string(rawResponse) == "null"
 }
