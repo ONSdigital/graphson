@@ -253,7 +253,7 @@ func DeserializeInt32(rawResponse json.RawMessage) (num int32, err error) {
 	}
 
 	if genVal.Type != "g:Int32" {
-		err = fmt.Errorf("DeserializeSingleFromBytes: Expected `g:List` type, but got %q", genVal.Type)
+		err = fmt.Errorf("DeserializeSingleFromBytes: Expected `g:Int32` type, but got %s", genVal.Type)
 		return
 	}
 	num = int32(genVal.Value.(float64))
