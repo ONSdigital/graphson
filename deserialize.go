@@ -241,12 +241,19 @@ func DeserializeNumber(rawResponse []byte) (count int64, err error) {
 
 func DeserializeInt32(rawResponse json.RawMessage) (num int32, err error) {
 	var genVal GenericValue
-	if genVal, err = DeserializeSingleFromBytes(rawResponse); err != nil {
+	if len(rawResponse) == 0 {
+		err = errors.New("DeserializeInt32: nothing to decode")
+		return
+	}
+
+	dec := json.NewDecoder(bytes.NewReader(rawResponse))
+	dec.DisallowUnknownFields()
+	if err = dec.Decode(&genVal); err != nil {
 		return
 	}
 
 	if genVal.Type != "g:Int32" {
-		err = fmt.Errorf("DeserializeNumber: Expected `g:Int32` type, but got %q", genVal.Type)
+		err = fmt.Errorf("DeserializeSingleFromBytes: Expected `g:List` type, but got %q", genVal.Type)
 		return
 	}
 	num = int32(genVal.Value.(float64))

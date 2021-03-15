@@ -776,24 +776,16 @@ func TestDeserializeInt32(t *testing.T) {
 		{
 			name: "Valid response returns the corresponding int32 number",
 			args: args{
-				rawResponse: []byte(`{"@type":"g:List","@value":[{"@type":"g:Int32","@value":1}]}`),
+				rawResponse: []byte(`{"@type":"g:Int32","@value":1}`),
 			},
 			want:    int32(1),
 			wantErr: false,
 		},
 
 		{
-			name: "Response with wrong external type returns an empty map and an error",
+			name: "Response with wrong type returns an empty map and an error",
 			args: args{
-				rawResponse: []byte(`{"@type":"g:Map","@value":[{"@type":"g:Int32","@value":1}]}`),
-			},
-			want:    0,
-			wantErr: true,
-		},
-		{
-			name: "Response with wrong internal type returns an empty map and an error",
-			args: args{
-				rawResponse: []byte(`{"@type":"g:List","@value":[{"@type":"g:Int64","@value":1}]}`),
+				rawResponse: []byte(`{"@type":"g:Map","@value":1}`),
 			},
 			want:    0,
 			wantErr: true,
