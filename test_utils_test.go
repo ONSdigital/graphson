@@ -87,3 +87,5 @@ func MakeDummyGenericValue(gvType string, value interface{}) GenericValue {
 		Value: value,
 	}
 }
+
+// func MakeDummyMap(gvType string, value )

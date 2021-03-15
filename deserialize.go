@@ -33,6 +33,28 @@ func DeserializeVerticesFromBytes(rawResponse []byte) ([]Vertex, error) {
 	return response, nil
 }
 
+// DeserializeListFromBytes validates that the provided RawMessage ([]byte) corresponds to a g:List type and returns a slice of values as RawMessages
+func DeserializeListFromBytes(rawResponse json.RawMessage) ([]json.RawMessage, error) {
+
+	if isEmptyResponse(rawResponse) {
+		return []json.RawMessage{}, nil
+	}
+
+	var metaResponse RawSlice
+
+	dec := json.NewDecoder(bytes.NewReader(rawResponse))
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&metaResponse); err != nil {
+		return nil, err
+	}
+
+	if metaResponse.Type != "g:List" {
+		return nil, fmt.Errorf("DeserializeListFromBytes: Expected `g:List` type, but got %q", metaResponse.Type)
+	}
+
+	return metaResponse.Value, nil
+}
+
 // DeserializeListOfVerticesFromBytes returns a slice of Vertex from the graphson rawResponse g:List of vertex
 func DeserializeListOfVerticesFromBytes(rawResponse []byte) ([]Vertex, error) {
 
@@ -79,13 +101,14 @@ func DeserializeListOfEdgesFromBytes(rawResponse []byte) (Edges, error) {
 	return metaResponse.Value, nil
 }
 
-func DeserializeMapFromBytes(rawResponse []byte) (resMap map[string]interface{}, err error) {
+func DeserializeMapFromBytes(rawResponse []byte) (resMap map[string]json.RawMessage, err error) {
+	resMap = make(map[string]json.RawMessage)
 
 	if isEmptyResponse(rawResponse) {
-		return map[string]interface{}{}, nil
+		return resMap, nil
 	}
 
-	var metaResponse GList
+	var metaResponse RawSlice
 
 	dec := json.NewDecoder(bytes.NewReader(rawResponse))
 	dec.DisallowUnknownFields()
@@ -94,7 +117,19 @@ func DeserializeMapFromBytes(rawResponse []byte) (resMap map[string]interface{},
 	}
 
 	if metaResponse.Type != "g:Map" {
-		return resMap, fmt.Errorf("DeserializeMapFromBytes: Expected `g:Map` type, but got %q", metaResponse.Type)
+		return nil, fmt.Errorf("DeserializeMapFromBytes: Expected `g:Map` type, but got %q", metaResponse.Type)
+	}
+
+	if len(metaResponse.Value)%2 != 0 {
+		return nil, errors.New("odd number of values, maps should have an even number of values to construct key-value pairs")
+	}
+
+	for i := 0; i < len(metaResponse.Value); i += 2 {
+		var resKey string
+		if err := json.Unmarshal(metaResponse.Value[i], &resKey); err != nil {
+			return nil, err
+		}
+		resMap[resKey] = metaResponse.Value[i+1]
 	}
 
 	return resMap, nil
@@ -102,7 +137,7 @@ func DeserializeMapFromBytes(rawResponse []byte) (resMap map[string]interface{},
 
 // DeserializePropertiesFromBytes is for converting vertex .properties() results into a map
 func DeserializePropertiesFromBytes(rawResponse []byte, resMap map[string][]interface{}) (err error) {
-	var metaResponse GList
+	var metaResponse Raw
 	if len(rawResponse) == 0 {
 		return
 	}
@@ -142,7 +177,7 @@ func DeserializeStringListFromBytes(rawResponse []byte) (vals []string, err erro
 	dec := json.NewDecoder(bytes.NewReader(rawResponse))
 	dec.DisallowUnknownFields()
 
-	var metaResponse GList
+	var metaResponse Raw
 	if err = dec.Decode(&metaResponse); err != nil {
 		return
 	}
@@ -160,7 +195,7 @@ func DeserializeStringListFromBytes(rawResponse []byte) (vals []string, err erro
 
 // DeserializeSingleFromBytes get a g:List value which should be a singular item, returns that item
 func DeserializeSingleFromBytes(rawResponse []byte) (gV GenericValue, err error) {
-	var metaResponse GList
+	var metaResponse Raw
 	if len(rawResponse) == 0 {
 		err = errors.New("DeserializeSingleFromBytes: nothing to decode")
 		return
@@ -201,6 +236,20 @@ func DeserializeNumber(rawResponse []byte) (count int64, err error) {
 		return
 	}
 	count = int64(genVal.Value.(float64))
+	return
+}
+
+func DeserializeInt32(rawResponse json.RawMessage) (num int32, err error) {
+	var genVal GenericValue
+	if genVal, err = DeserializeSingleFromBytes(rawResponse); err != nil {
+		return
+	}
+
+	if genVal.Type != "g:Int32" {
+		err = fmt.Errorf("DeserializeNumber: Expected `g:Int32` type, but got %q", genVal.Type)
+		return
+	}
+	num = int32(genVal.Value.(float64))
 	return
 }
 

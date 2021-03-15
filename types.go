@@ -8,20 +8,25 @@ import "encoding/json"
 // 	E Edges
 // }
 
-type GList struct {
+// Raw contains a RawMessage as value
+type Raw struct {
 	Type  string          `json:"@type"`
 	Value json.RawMessage `json:"@value"`
 }
 
-// type GMap struct {
-// 	Type  string          `json:"@type"`
-// 	Value json.RawMessage `json:"@value"`
-// }
+// RawSlice contains a slice of RawMessages as value
+type RawSlice struct {
+	Type  string            `json:"@type"`
+	Value []json.RawMessage `json:"@value"`
+}
 
+// ListVertices contains a slice of Vertices as value
 type ListVertices struct {
 	Type  string   `json:"@type"`
 	Value []Vertex `json:"@value"`
 }
+
+// ListEdges contains a slice of Edges as value
 type ListEdges struct {
 	Type  string `json:"@type"`
 	Value Edges  `json:"@value"`

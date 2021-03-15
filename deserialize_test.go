@@ -1,6 +1,7 @@
 package graphson
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -583,37 +584,80 @@ func TestDeserializeMapFromBytes(t *testing.T) {
 	type args struct {
 		rawResponse []byte
 	}
+
+	testOrder := 1
+	testUsedByEdge := `{"label":"2019 Q3","label":"usedBy", "id":"8cba789f-386a-281f-e18f-3ab0bc6e0170","order":1}`
+	testRawUsedByEdge := json.RawMessage{123, 34, 64, 116, 121, 112, 101, 34, 58, 34, 103, 46, 101, 100, 103, 101, 34, 44, 34, 64, 118, 97, 108, 117, 101, 34, 58, 123, 34, 108, 97, 98, 101, 108, 34, 58, 34, 50, 48, 49, 57, 32, 81, 51, 34, 44, 34, 108, 97, 98, 101, 108, 34, 58, 34, 117, 115, 101, 100, 66, 121, 34, 44, 32, 34, 105, 100, 34, 58, 34, 56, 99, 98, 97, 55, 56, 57, 102, 45, 51, 56, 54, 97, 45, 50, 56, 49, 102, 45, 101, 49, 56, 102, 45, 51, 97, 98, 48, 98, 99, 54, 101, 48, 49, 55, 48, 34, 44, 34, 111, 114, 100, 101, 114, 34, 58, 49, 125, 125}
+	testRawOrder := json.RawMessage{49}
+
 	tests := []struct {
 		name    string
 		args    args
-		want    map[string]interface{}
+		want    map[string]json.RawMessage
 		wantErr bool
 	}{
 		{
-			name: "Empty response returns empty array",
+			name: "Empty response returns empty map",
 			args: args{
 				rawResponse: []byte(""),
 			},
-			want:    map[string]interface{}{},
+			want:    map[string]json.RawMessage{},
 			wantErr: false,
 		},
 		{
-			name: "Null response returns empty array",
+			name: "Null response returns empty map",
 			args: args{
 				rawResponse: []byte("null"),
 			},
-			want:    map[string]interface{}{},
+			want:    map[string]json.RawMessage{},
 			wantErr: false,
 		},
 		{
-			name: "Empty array response returns empty array",
+			name: "Empty array response returns empty map",
 			args: args{
 				rawResponse: []byte("null"),
 			},
-			want:    map[string]interface{}{},
+			want:    map[string]json.RawMessage{},
 			wantErr: false,
+		},
+		{
+			name: "Valid map response returns a valid map",
+			args: args{
+				rawResponse: []byte(fmt.Sprintf(`{"@type":"g:Map","@value":["order",%d,"usedBy",{"@type":"g.edge","@value":%s}]}`, testOrder, testUsedByEdge)),
+			},
+			want: map[string]json.RawMessage{
+				"order":  testRawOrder,
+				"usedBy": testRawUsedByEdge,
+			},
+			wantErr: false,
+		},
+
+		{
+			name: "Invalid array response returns empty map and error",
+			args: args{
+				rawResponse: []byte("wrongValue"),
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "Response with wrong type returns an empty map and an error",
+			args: args{
+				rawResponse: []byte(fmt.Sprintf(`{"@type":"g:List","@value":["order",%d,"usedBy",{"@type":"g.edge","@value":%s}]}`, testOrder, testUsedByEdge)),
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "Response with an odd number of values in the array returns an empty map and an error",
+			args: args{
+				rawResponse: []byte(fmt.Sprintf(`{"@type":"g:Map","@value":["order",%d,"usedBy",{"@type":"g.edge","@value":%s},"unexpected"]}`, testOrder, testUsedByEdge)),
+			},
+			want:    nil,
+			wantErr: true,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotResMap, err := DeserializeMapFromBytes(tt.args.rawResponse)
@@ -623,6 +667,148 @@ func TestDeserializeMapFromBytes(t *testing.T) {
 			}
 			if !reflect.DeepEqual(gotResMap, tt.want) {
 				t.Errorf("DeserializeMapFromBytes() gotResMap = %v, want %v", gotResMap, tt.want)
+			}
+		})
+	}
+}
+
+func TestDeserializeListFromBytes(t *testing.T) {
+	type args struct {
+		rawResponse []byte
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []json.RawMessage
+		wantErr bool
+	}{
+		{
+			name: "Empty response returns empty map",
+			args: args{
+				rawResponse: []byte(""),
+			},
+			want:    []json.RawMessage{},
+			wantErr: false,
+		},
+		{
+			name: "Null response returns empty map",
+			args: args{
+				rawResponse: []byte("null"),
+			},
+			want:    []json.RawMessage{},
+			wantErr: false,
+		},
+		{
+			name: "Empty array response returns empty map",
+			args: args{
+				rawResponse: []byte("null"),
+			},
+			want:    []json.RawMessage{},
+			wantErr: false,
+		},
+		{
+			name: "Valid array response returns a valid array",
+			args: args{
+				rawResponse: []byte(`{"@type":"g:List","@value":[1,2,3,4]}`),
+			},
+			want:    []json.RawMessage{{49}, {50}, {51}, {52}},
+			wantErr: false,
+		},
+
+		{
+			name: "Invalid array response returns empty map and error",
+			args: args{
+				rawResponse: []byte("wrongValue"),
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "Response with wrong type returns an empty map and an error",
+			args: args{
+				rawResponse: []byte(fmt.Sprintf(`{"@type":"g:Map","@value":["order",1,"usedBy",{"@type":"g.edge","@value":"someVal"}]}`)),
+			},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotResList, err := DeserializeListFromBytes(tt.args.rawResponse)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DeserializeListFromBytes() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotResList, tt.want) {
+				t.Errorf("DeserializeListFromBytes() gotResList = %v, want %v", gotResList, tt.want)
+			}
+		})
+	}
+}
+
+func TestDeserializeInt32(t *testing.T) {
+	type args struct {
+		rawResponse []byte
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    int32
+		wantErr bool
+	}{
+		{
+			name: "Empty response returns an error",
+			args: args{
+				rawResponse: []byte(""),
+			},
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name: "Null response returns empty map",
+			args: args{
+				rawResponse: []byte("null"),
+			},
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name: "Valid response returns the corresponding int32 number",
+			args: args{
+				rawResponse: []byte(`{"@type":"g:List","@value":[{"@type":"g:Int32","@value":1}]}`),
+			},
+			want:    int32(1),
+			wantErr: false,
+		},
+
+		{
+			name: "Response with wrong external type returns an empty map and an error",
+			args: args{
+				rawResponse: []byte(`{"@type":"g:Map","@value":[{"@type":"g:Int32","@value":1}]}`),
+			},
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name: "Response with wrong internal type returns an empty map and an error",
+			args: args{
+				rawResponse: []byte(`{"@type":"g:List","@value":[{"@type":"g:Int64","@value":1}]}`),
+			},
+			want:    0,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotResList, err := DeserializeInt32(tt.args.rawResponse)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DeserializeInt32() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotResList, tt.want) {
+				t.Errorf("DeserializeInt32() gotResList = %v, want %v", gotResList, tt.want)
 			}
 		})
 	}
