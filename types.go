@@ -65,8 +65,8 @@ type EdgePropertyValue struct {
 	Label string `json:"key"`
 	// Value GenericValue `json:"value"` // this works when value is NOT a string
 	Value json.RawMessage `json:"value"`
-	// ValueStr string       `json:"value"`
-	// Value interface{} `json:"value"`
+	// ValueStr string    `json:"value"`
+	// Value interface{}  `json:"value"`
 }
 
 type GenericValues []GenericValue

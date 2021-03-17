@@ -1,7 +1,6 @@
 package graphson
 
 import (
-	"encoding/json"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -265,7 +264,7 @@ func TestConvertToCleanVertices(t *testing.T) {
 
 		for j, resultCleanVertex := range result {
 			expectedCleanVertex := expected[j]
-			if expectedCleanVertex.Id != resultCleanVertex.Id || expectedCleanVertex.Label != expectedCleanVertex.Label {
+			if expectedCleanVertex.Id != resultCleanVertex.Id {
 				t.Error("given", given, "expected", expected, "result", result)
 			}
 		}
@@ -415,12 +414,12 @@ type testJSON struct {
 	keyOf     *string
 }
 
-var jsonParseStringErr = regexp.MustCompile("json: cannot unmarshal string")
-var jsonParseObjectErr = regexp.MustCompile("json: cannot unmarshal object")
-var jsonParseArrayErr = regexp.MustCompile("json: cannot unmarshal array")
-var jsonParseNumberErr = regexp.MustCompile("json: cannot unmarshal number")
-var emptyString = ""
-var emptyGeneric = GenericValue{Type: "", Value: interface{}(nil)}
+var (
+	jsonParseStringErr = regexp.MustCompile("json: cannot unmarshal string")
+	jsonParseArrayErr  = regexp.MustCompile("json: cannot unmarshal array")
+	jsonParseNumberErr = regexp.MustCompile("json: cannot unmarshal number")
+	emptyGeneric       = GenericValue{Type: "", Value: interface{}(nil)}
+)
 
 var jsonTests = []testJSON{
 	{
@@ -587,13 +586,13 @@ func TestDeserializeMapFromBytes(t *testing.T) {
 
 	testOrder := 1
 	testUsedByEdge := `{"label":"2019 Q3","label":"usedBy", "id":"8cba789f-386a-281f-e18f-3ab0bc6e0170","order":1}`
-	testRawUsedByEdge := json.RawMessage{123, 34, 64, 116, 121, 112, 101, 34, 58, 34, 103, 46, 101, 100, 103, 101, 34, 44, 34, 64, 118, 97, 108, 117, 101, 34, 58, 123, 34, 108, 97, 98, 101, 108, 34, 58, 34, 50, 48, 49, 57, 32, 81, 51, 34, 44, 34, 108, 97, 98, 101, 108, 34, 58, 34, 117, 115, 101, 100, 66, 121, 34, 44, 32, 34, 105, 100, 34, 58, 34, 56, 99, 98, 97, 55, 56, 57, 102, 45, 51, 56, 54, 97, 45, 50, 56, 49, 102, 45, 101, 49, 56, 102, 45, 51, 97, 98, 48, 98, 99, 54, 101, 48, 49, 55, 48, 34, 44, 34, 111, 114, 100, 101, 114, 34, 58, 49, 125, 125}
-	testRawOrder := json.RawMessage{49}
+	testRawUsedByEdge := []byte{123, 34, 64, 116, 121, 112, 101, 34, 58, 34, 103, 46, 101, 100, 103, 101, 34, 44, 34, 64, 118, 97, 108, 117, 101, 34, 58, 123, 34, 108, 97, 98, 101, 108, 34, 58, 34, 50, 48, 49, 57, 32, 81, 51, 34, 44, 34, 108, 97, 98, 101, 108, 34, 58, 34, 117, 115, 101, 100, 66, 121, 34, 44, 32, 34, 105, 100, 34, 58, 34, 56, 99, 98, 97, 55, 56, 57, 102, 45, 51, 56, 54, 97, 45, 50, 56, 49, 102, 45, 101, 49, 56, 102, 45, 51, 97, 98, 48, 98, 99, 54, 101, 48, 49, 55, 48, 34, 44, 34, 111, 114, 100, 101, 114, 34, 58, 49, 125, 125}
+	testRawOrder := []byte{49}
 
 	tests := []struct {
 		name    string
 		args    args
-		want    map[string]json.RawMessage
+		want    map[string][]byte
 		wantErr bool
 	}{
 		{
@@ -601,7 +600,7 @@ func TestDeserializeMapFromBytes(t *testing.T) {
 			args: args{
 				rawResponse: []byte(""),
 			},
-			want:    map[string]json.RawMessage{},
+			want:    map[string][]byte{},
 			wantErr: false,
 		},
 		{
@@ -609,7 +608,7 @@ func TestDeserializeMapFromBytes(t *testing.T) {
 			args: args{
 				rawResponse: []byte("null"),
 			},
-			want:    map[string]json.RawMessage{},
+			want:    map[string][]byte{},
 			wantErr: false,
 		},
 		{
@@ -617,7 +616,7 @@ func TestDeserializeMapFromBytes(t *testing.T) {
 			args: args{
 				rawResponse: []byte("null"),
 			},
-			want:    map[string]json.RawMessage{},
+			want:    map[string][]byte{},
 			wantErr: false,
 		},
 		{
@@ -625,7 +624,7 @@ func TestDeserializeMapFromBytes(t *testing.T) {
 			args: args{
 				rawResponse: []byte(fmt.Sprintf(`{"@type":"g:Map","@value":["order",%d,"usedBy",{"@type":"g.edge","@value":%s}]}`, testOrder, testUsedByEdge)),
 			},
-			want: map[string]json.RawMessage{
+			want: map[string][]byte{
 				"order":  testRawOrder,
 				"usedBy": testRawUsedByEdge,
 			},
@@ -679,7 +678,7 @@ func TestDeserializeListFromBytes(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    []json.RawMessage
+		want    [][]byte
 		wantErr bool
 	}{
 		{
@@ -687,7 +686,7 @@ func TestDeserializeListFromBytes(t *testing.T) {
 			args: args{
 				rawResponse: []byte(""),
 			},
-			want:    []json.RawMessage{},
+			want:    [][]byte{},
 			wantErr: false,
 		},
 		{
@@ -695,7 +694,7 @@ func TestDeserializeListFromBytes(t *testing.T) {
 			args: args{
 				rawResponse: []byte("null"),
 			},
-			want:    []json.RawMessage{},
+			want:    [][]byte{},
 			wantErr: false,
 		},
 		{
@@ -703,7 +702,7 @@ func TestDeserializeListFromBytes(t *testing.T) {
 			args: args{
 				rawResponse: []byte("null"),
 			},
-			want:    []json.RawMessage{},
+			want:    [][]byte{},
 			wantErr: false,
 		},
 		{
@@ -711,7 +710,7 @@ func TestDeserializeListFromBytes(t *testing.T) {
 			args: args{
 				rawResponse: []byte(`{"@type":"g:List","@value":[1,2,3,4]}`),
 			},
-			want:    []json.RawMessage{{49}, {50}, {51}, {52}},
+			want:    [][]byte{{49}, {50}, {51}, {52}},
 			wantErr: false,
 		},
 

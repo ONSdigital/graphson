@@ -32,7 +32,7 @@ func TestStringProperties(t *testing.T) {
 		{Type: "g:Vertex",
 			Value: VertexValue{ID: "test-id1", Label: "lable",
 				Properties: map[string][]VertexProperty{
-					p: []VertexProperty{
+					p: {
 						{Type: "g:VertexProperty",
 							Value: VertexPropertyValue{ID: genericID, Label: p,
 								Value: exStr["tSimple"][0],
@@ -67,7 +67,7 @@ func TestStringProperties(t *testing.T) {
 		{Type: "g:Vertex",
 			Value: VertexValue{ID: "test-id1", Label: "lable",
 				Properties: map[string][]VertexProperty{
-					p: []VertexProperty{
+					p: {
 						{Type: "g:VertexProperty",
 							Value: VertexPropertyValue{ID: genericID, Label: p,
 								Value: exStr["tMulti"][0],
@@ -86,7 +86,7 @@ func TestStringProperties(t *testing.T) {
 		{Type: "g:Vertex",
 			Value: VertexValue{ID: "test-id1", Label: "lable",
 				Properties: map[string][]VertexProperty{
-					p: []VertexProperty{
+					p: {
 						{Type: "g:VertexProperty",
 							Value: VertexPropertyValue{ID: genericID, Label: p + "1",
 								Value: exStr["tMeta"][0],

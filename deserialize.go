@@ -33,11 +33,11 @@ func DeserializeVerticesFromBytes(rawResponse []byte) ([]Vertex, error) {
 	return response, nil
 }
 
-// DeserializeListFromBytes validates that the provided RawMessage ([]byte) corresponds to a g:List type and returns a slice of values as RawMessages
-func DeserializeListFromBytes(rawResponse json.RawMessage) ([]json.RawMessage, error) {
+// DeserializeListFromBytes validates that the provided array of bytes corresponds to a g:List type and returns a slice of values as an array of bytes each
+func DeserializeListFromBytes(rawResponse []byte) ([][]byte, error) {
 
 	if isEmptyResponse(rawResponse) {
-		return []json.RawMessage{}, nil
+		return [][]byte{}, nil
 	}
 
 	var metaResponse RawSlice
@@ -101,8 +101,8 @@ func DeserializeListOfEdgesFromBytes(rawResponse []byte) (Edges, error) {
 	return metaResponse.Value, nil
 }
 
-func DeserializeMapFromBytes(rawResponse []byte) (resMap map[string]json.RawMessage, err error) {
-	resMap = make(map[string]json.RawMessage)
+func DeserializeMapFromBytes(rawResponse []byte) (resMap map[string][]byte, err error) {
+	resMap = make(map[string][]byte)
 
 	if isEmptyResponse(rawResponse) {
 		return resMap, nil
@@ -239,7 +239,7 @@ func DeserializeNumber(rawResponse []byte) (count int64, err error) {
 	return
 }
 
-func DeserializeInt32(rawResponse json.RawMessage) (num int32, err error) {
+func DeserializeInt32(rawResponse []byte) (num int32, err error) {
 	var genVal GenericValue
 	if len(rawResponse) == 0 {
 		err = errors.New("DeserializeInt32: nothing to decode")

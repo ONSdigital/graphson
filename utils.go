@@ -20,7 +20,7 @@ func (v Vertex) GetID() string {
 // GetLabels returns the []string labels for the given vertex
 func (v Vertex) GetLabels() (labels []string) {
 	labels = append(labels, v.Value.Label)
-	if strings.Index(labels[0], "::") == -1 {
+	if !strings.Contains(labels[0], "::") {
 		return
 	}
 	return strings.Split(labels[0], "::")
