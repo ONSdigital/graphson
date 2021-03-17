@@ -1,6 +1,7 @@
 package graphson
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -320,7 +321,7 @@ func TestConvertToCleanEdges(t *testing.T) {
 
 func TestDeserializeStringListFromBytes(t *testing.T) {
 	type args struct {
-		rawResponse []byte
+		rawResponse json.RawMessage
 	}
 	tests := []struct {
 		name    string
@@ -331,7 +332,7 @@ func TestDeserializeStringListFromBytes(t *testing.T) {
 		{
 			name: "Empty response returns empty array",
 			args: args{
-				rawResponse: []byte(""),
+				rawResponse: json.RawMessage(""),
 			},
 			want:    []string{},
 			wantErr: false,
@@ -339,7 +340,7 @@ func TestDeserializeStringListFromBytes(t *testing.T) {
 		{
 			name: "Null response returns empty array",
 			args: args{
-				rawResponse: []byte("null"),
+				rawResponse: json.RawMessage("null"),
 			},
 			want:    []string{},
 			wantErr: false,
@@ -483,7 +484,7 @@ var jsonTests = []testJSON{
 
 func TestDeserializeListOfVerticesFromBytes(t *testing.T) {
 	type args struct {
-		rawResponse []byte
+		rawResponse json.RawMessage
 	}
 	tests := []struct {
 		name    string
@@ -494,7 +495,7 @@ func TestDeserializeListOfVerticesFromBytes(t *testing.T) {
 		{
 			name: "Empty response returns empty array",
 			args: args{
-				rawResponse: []byte(""),
+				rawResponse: json.RawMessage(""),
 			},
 			want:    []Vertex{},
 			wantErr: false,
@@ -502,7 +503,7 @@ func TestDeserializeListOfVerticesFromBytes(t *testing.T) {
 		{
 			name: "Null response returns empty array",
 			args: args{
-				rawResponse: []byte("null"),
+				rawResponse: json.RawMessage("null"),
 			},
 			want:    []Vertex{},
 			wantErr: false,
@@ -510,7 +511,7 @@ func TestDeserializeListOfVerticesFromBytes(t *testing.T) {
 		{
 			name: "Empty array response returns empty array",
 			args: args{
-				rawResponse: []byte("null"),
+				rawResponse: json.RawMessage("null"),
 			},
 			want:    []Vertex{},
 			wantErr: false,
@@ -532,7 +533,7 @@ func TestDeserializeListOfVerticesFromBytes(t *testing.T) {
 
 func TestDeserializeListOfEdgesFromBytes(t *testing.T) {
 	type args struct {
-		rawResponse []byte
+		rawResponse json.RawMessage
 	}
 	tests := []struct {
 		name    string
@@ -543,7 +544,7 @@ func TestDeserializeListOfEdgesFromBytes(t *testing.T) {
 		{
 			name: "Empty response returns empty array",
 			args: args{
-				rawResponse: []byte(""),
+				rawResponse: json.RawMessage(""),
 			},
 			want:    Edges{},
 			wantErr: false,
@@ -551,7 +552,7 @@ func TestDeserializeListOfEdgesFromBytes(t *testing.T) {
 		{
 			name: "Null response returns empty array",
 			args: args{
-				rawResponse: []byte("null"),
+				rawResponse: json.RawMessage("null"),
 			},
 			want:    Edges{},
 			wantErr: false,
@@ -559,7 +560,7 @@ func TestDeserializeListOfEdgesFromBytes(t *testing.T) {
 		{
 			name: "Empty array response returns empty array",
 			args: args{
-				rawResponse: []byte("null"),
+				rawResponse: json.RawMessage("null"),
 			},
 			want:    Edges{},
 			wantErr: false,
@@ -581,50 +582,50 @@ func TestDeserializeListOfEdgesFromBytes(t *testing.T) {
 
 func TestDeserializeMapFromBytes(t *testing.T) {
 	type args struct {
-		rawResponse []byte
+		rawResponse json.RawMessage
 	}
 
 	testOrder := 1
 	testUsedByEdge := `{"label":"2019 Q3","label":"usedBy", "id":"8cba789f-386a-281f-e18f-3ab0bc6e0170","order":1}`
-	testRawUsedByEdge := []byte{123, 34, 64, 116, 121, 112, 101, 34, 58, 34, 103, 46, 101, 100, 103, 101, 34, 44, 34, 64, 118, 97, 108, 117, 101, 34, 58, 123, 34, 108, 97, 98, 101, 108, 34, 58, 34, 50, 48, 49, 57, 32, 81, 51, 34, 44, 34, 108, 97, 98, 101, 108, 34, 58, 34, 117, 115, 101, 100, 66, 121, 34, 44, 32, 34, 105, 100, 34, 58, 34, 56, 99, 98, 97, 55, 56, 57, 102, 45, 51, 56, 54, 97, 45, 50, 56, 49, 102, 45, 101, 49, 56, 102, 45, 51, 97, 98, 48, 98, 99, 54, 101, 48, 49, 55, 48, 34, 44, 34, 111, 114, 100, 101, 114, 34, 58, 49, 125, 125}
-	testRawOrder := []byte{49}
+	testRawUsedByEdge := json.RawMessage{123, 34, 64, 116, 121, 112, 101, 34, 58, 34, 103, 46, 101, 100, 103, 101, 34, 44, 34, 64, 118, 97, 108, 117, 101, 34, 58, 123, 34, 108, 97, 98, 101, 108, 34, 58, 34, 50, 48, 49, 57, 32, 81, 51, 34, 44, 34, 108, 97, 98, 101, 108, 34, 58, 34, 117, 115, 101, 100, 66, 121, 34, 44, 32, 34, 105, 100, 34, 58, 34, 56, 99, 98, 97, 55, 56, 57, 102, 45, 51, 56, 54, 97, 45, 50, 56, 49, 102, 45, 101, 49, 56, 102, 45, 51, 97, 98, 48, 98, 99, 54, 101, 48, 49, 55, 48, 34, 44, 34, 111, 114, 100, 101, 114, 34, 58, 49, 125, 125}
+	testRawOrder := json.RawMessage{49}
 
 	tests := []struct {
 		name    string
 		args    args
-		want    map[string][]byte
+		want    map[string]json.RawMessage
 		wantErr bool
 	}{
 		{
 			name: "Empty response returns empty map",
 			args: args{
-				rawResponse: []byte(""),
+				rawResponse: json.RawMessage(""),
 			},
-			want:    map[string][]byte{},
+			want:    map[string]json.RawMessage{},
 			wantErr: false,
 		},
 		{
 			name: "Null response returns empty map",
 			args: args{
-				rawResponse: []byte("null"),
+				rawResponse: json.RawMessage("null"),
 			},
-			want:    map[string][]byte{},
+			want:    map[string]json.RawMessage{},
 			wantErr: false,
 		},
 		{
 			name: "Empty array response returns empty map",
 			args: args{
-				rawResponse: []byte("null"),
+				rawResponse: json.RawMessage("null"),
 			},
-			want:    map[string][]byte{},
+			want:    map[string]json.RawMessage{},
 			wantErr: false,
 		},
 		{
 			name: "Valid map response returns a valid map",
 			args: args{
-				rawResponse: []byte(fmt.Sprintf(`{"@type":"g:Map","@value":["order",%d,"usedBy",{"@type":"g.edge","@value":%s}]}`, testOrder, testUsedByEdge)),
+				rawResponse: json.RawMessage(fmt.Sprintf(`{"@type":"g:Map","@value":["order",%d,"usedBy",{"@type":"g.edge","@value":%s}]}`, testOrder, testUsedByEdge)),
 			},
-			want: map[string][]byte{
+			want: map[string]json.RawMessage{
 				"order":  testRawOrder,
 				"usedBy": testRawUsedByEdge,
 			},
@@ -634,7 +635,7 @@ func TestDeserializeMapFromBytes(t *testing.T) {
 		{
 			name: "Invalid array response returns empty map and error",
 			args: args{
-				rawResponse: []byte("wrongValue"),
+				rawResponse: json.RawMessage("wrongValue"),
 			},
 			want:    nil,
 			wantErr: true,
@@ -642,7 +643,7 @@ func TestDeserializeMapFromBytes(t *testing.T) {
 		{
 			name: "Response with wrong type returns an empty map and an error",
 			args: args{
-				rawResponse: []byte(fmt.Sprintf(`{"@type":"g:List","@value":["order",%d,"usedBy",{"@type":"g.edge","@value":%s}]}`, testOrder, testUsedByEdge)),
+				rawResponse: json.RawMessage(fmt.Sprintf(`{"@type":"g:List","@value":["order",%d,"usedBy",{"@type":"g.edge","@value":%s}]}`, testOrder, testUsedByEdge)),
 			},
 			want:    nil,
 			wantErr: true,
@@ -650,7 +651,7 @@ func TestDeserializeMapFromBytes(t *testing.T) {
 		{
 			name: "Response with an odd number of values in the array returns an empty map and an error",
 			args: args{
-				rawResponse: []byte(fmt.Sprintf(`{"@type":"g:Map","@value":["order",%d,"usedBy",{"@type":"g.edge","@value":%s},"unexpected"]}`, testOrder, testUsedByEdge)),
+				rawResponse: json.RawMessage(fmt.Sprintf(`{"@type":"g:Map","@value":["order",%d,"usedBy",{"@type":"g.edge","@value":%s},"unexpected"]}`, testOrder, testUsedByEdge)),
 			},
 			want:    nil,
 			wantErr: true,
@@ -673,51 +674,51 @@ func TestDeserializeMapFromBytes(t *testing.T) {
 
 func TestDeserializeListFromBytes(t *testing.T) {
 	type args struct {
-		rawResponse []byte
+		rawResponse json.RawMessage
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    [][]byte
+		want    []json.RawMessage
 		wantErr bool
 	}{
 		{
 			name: "Empty response returns empty map",
 			args: args{
-				rawResponse: []byte(""),
+				rawResponse: json.RawMessage(""),
 			},
-			want:    [][]byte{},
+			want:    []json.RawMessage{},
 			wantErr: false,
 		},
 		{
 			name: "Null response returns empty map",
 			args: args{
-				rawResponse: []byte("null"),
+				rawResponse: json.RawMessage("null"),
 			},
-			want:    [][]byte{},
+			want:    []json.RawMessage{},
 			wantErr: false,
 		},
 		{
 			name: "Empty array response returns empty map",
 			args: args{
-				rawResponse: []byte("null"),
+				rawResponse: json.RawMessage("null"),
 			},
-			want:    [][]byte{},
+			want:    []json.RawMessage{},
 			wantErr: false,
 		},
 		{
 			name: "Valid array response returns a valid array",
 			args: args{
-				rawResponse: []byte(`{"@type":"g:List","@value":[1,2,3,4]}`),
+				rawResponse: json.RawMessage(`{"@type":"g:List","@value":[1,2,3,4]}`),
 			},
-			want:    [][]byte{{49}, {50}, {51}, {52}},
+			want:    []json.RawMessage{{49}, {50}, {51}, {52}},
 			wantErr: false,
 		},
 
 		{
 			name: "Invalid array response returns empty map and error",
 			args: args{
-				rawResponse: []byte("wrongValue"),
+				rawResponse: json.RawMessage("wrongValue"),
 			},
 			want:    nil,
 			wantErr: true,
@@ -725,7 +726,7 @@ func TestDeserializeListFromBytes(t *testing.T) {
 		{
 			name: "Response with wrong type returns an empty map and an error",
 			args: args{
-				rawResponse: []byte(fmt.Sprintf(`{"@type":"g:Map","@value":["order",1,"usedBy",{"@type":"g.edge","@value":"someVal"}]}`)),
+				rawResponse: json.RawMessage(fmt.Sprintf(`{"@type":"g:Map","@value":["order",1,"usedBy",{"@type":"g.edge","@value":"someVal"}]}`)),
 			},
 			want:    nil,
 			wantErr: true,
@@ -748,7 +749,7 @@ func TestDeserializeListFromBytes(t *testing.T) {
 
 func TestDeserializeInt32(t *testing.T) {
 	type args struct {
-		rawResponse []byte
+		rawResponse json.RawMessage
 	}
 	tests := []struct {
 		name    string
@@ -759,7 +760,7 @@ func TestDeserializeInt32(t *testing.T) {
 		{
 			name: "Empty response returns an error",
 			args: args{
-				rawResponse: []byte(""),
+				rawResponse: json.RawMessage(""),
 			},
 			want:    0,
 			wantErr: true,
@@ -767,7 +768,7 @@ func TestDeserializeInt32(t *testing.T) {
 		{
 			name: "Null response returns empty map",
 			args: args{
-				rawResponse: []byte("null"),
+				rawResponse: json.RawMessage("null"),
 			},
 			want:    0,
 			wantErr: true,
@@ -775,7 +776,7 @@ func TestDeserializeInt32(t *testing.T) {
 		{
 			name: "Valid response returns the corresponding int32 number",
 			args: args{
-				rawResponse: []byte(`{"@type":"g:Int32","@value":1}`),
+				rawResponse: json.RawMessage(`{"@type":"g:Int32","@value":1}`),
 			},
 			want:    int32(1),
 			wantErr: false,
@@ -784,7 +785,7 @@ func TestDeserializeInt32(t *testing.T) {
 		{
 			name: "Response with wrong type returns an empty map and an error",
 			args: args{
-				rawResponse: []byte(`{"@type":"g:Map","@value":1}`),
+				rawResponse: json.RawMessage(`{"@type":"g:Map","@value":1}`),
 			},
 			want:    0,
 			wantErr: true,

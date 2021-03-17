@@ -14,11 +14,11 @@ func DeserializeVertices(rawResponse string) ([]Vertex, error) {
 	if len(rawResponse) == 0 {
 		return []Vertex{}, nil
 	}
-	return DeserializeVerticesFromBytes([]byte(rawResponse))
+	return DeserializeVerticesFromBytes(json.RawMessage(rawResponse))
 }
 
 // DeserializeVerticesFromBytes returns a slice of Vertex from the graphson rawResponse list of vertex
-func DeserializeVerticesFromBytes(rawResponse []byte) ([]Vertex, error) {
+func DeserializeVerticesFromBytes(rawResponse json.RawMessage) ([]Vertex, error) {
 	// TODO: empty strings for property values will cause invalid json
 	// make so it can handle that case
 	var response []Vertex
@@ -33,11 +33,11 @@ func DeserializeVerticesFromBytes(rawResponse []byte) ([]Vertex, error) {
 	return response, nil
 }
 
-// DeserializeListFromBytes validates that the provided array of bytes corresponds to a g:List type and returns a slice of values as an array of bytes each
-func DeserializeListFromBytes(rawResponse []byte) ([][]byte, error) {
+// DeserializeListFromBytes validates that the provided RawMessage corresponds to a g:List type and returns a slice of RawMessage values
+func DeserializeListFromBytes(rawResponse json.RawMessage) ([]json.RawMessage, error) {
 
 	if isEmptyResponse(rawResponse) {
-		return [][]byte{}, nil
+		return []json.RawMessage{}, nil
 	}
 
 	var metaResponse RawSlice
@@ -56,7 +56,7 @@ func DeserializeListFromBytes(rawResponse []byte) ([][]byte, error) {
 }
 
 // DeserializeListOfVerticesFromBytes returns a slice of Vertex from the graphson rawResponse g:List of vertex
-func DeserializeListOfVerticesFromBytes(rawResponse []byte) ([]Vertex, error) {
+func DeserializeListOfVerticesFromBytes(rawResponse json.RawMessage) ([]Vertex, error) {
 
 	if isEmptyResponse(rawResponse) {
 		return []Vertex{}, nil
@@ -78,7 +78,7 @@ func DeserializeListOfVerticesFromBytes(rawResponse []byte) ([]Vertex, error) {
 	return metaResponse.Value, nil
 }
 
-func DeserializeListOfEdgesFromBytes(rawResponse []byte) (Edges, error) {
+func DeserializeListOfEdgesFromBytes(rawResponse json.RawMessage) (Edges, error) {
 
 	if isEmptyResponse(rawResponse) {
 		return Edges{}, nil
@@ -101,8 +101,8 @@ func DeserializeListOfEdgesFromBytes(rawResponse []byte) (Edges, error) {
 	return metaResponse.Value, nil
 }
 
-func DeserializeMapFromBytes(rawResponse []byte) (resMap map[string][]byte, err error) {
-	resMap = make(map[string][]byte)
+func DeserializeMapFromBytes(rawResponse json.RawMessage) (resMap map[string]json.RawMessage, err error) {
+	resMap = make(map[string]json.RawMessage)
 
 	if isEmptyResponse(rawResponse) {
 		return resMap, nil
@@ -136,7 +136,7 @@ func DeserializeMapFromBytes(rawResponse []byte) (resMap map[string][]byte, err 
 }
 
 // DeserializePropertiesFromBytes is for converting vertex .properties() results into a map
-func DeserializePropertiesFromBytes(rawResponse []byte, resMap map[string][]interface{}) (err error) {
+func DeserializePropertiesFromBytes(rawResponse json.RawMessage, resMap map[string][]interface{}) (err error) {
 	var metaResponse Raw
 	if len(rawResponse) == 0 {
 		return
@@ -167,7 +167,7 @@ func DeserializePropertiesFromBytes(rawResponse []byte, resMap map[string][]inte
 }
 
 // DeserializeStringListFromBytes get a g:List value which should be a a list of strings, return those
-func DeserializeStringListFromBytes(rawResponse []byte) (vals []string, err error) {
+func DeserializeStringListFromBytes(rawResponse json.RawMessage) (vals []string, err error) {
 
 	if isEmptyResponse(rawResponse) {
 		vals = []string{}
@@ -194,7 +194,7 @@ func DeserializeStringListFromBytes(rawResponse []byte) (vals []string, err erro
 }
 
 // DeserializeSingleFromBytes get a g:List value which should be a singular item, returns that item
-func DeserializeSingleFromBytes(rawResponse []byte) (gV GenericValue, err error) {
+func DeserializeSingleFromBytes(rawResponse json.RawMessage) (gV GenericValue, err error) {
 	var metaResponse Raw
 	if len(rawResponse) == 0 {
 		err = errors.New("DeserializeSingleFromBytes: nothing to decode")
@@ -225,7 +225,7 @@ func DeserializeSingleFromBytes(rawResponse []byte) (gV GenericValue, err error)
 }
 
 // DeserializeNumber returns the count from the g:List'd database response
-func DeserializeNumber(rawResponse []byte) (count int64, err error) {
+func DeserializeNumber(rawResponse json.RawMessage) (count int64, err error) {
 	var genVal GenericValue
 	if genVal, err = DeserializeSingleFromBytes(rawResponse); err != nil {
 		return
@@ -239,7 +239,7 @@ func DeserializeNumber(rawResponse []byte) (count int64, err error) {
 	return
 }
 
-func DeserializeInt32(rawResponse []byte) (num int32, err error) {
+func DeserializeInt32(rawResponse json.RawMessage) (num int32, err error) {
 	var genVal GenericValue
 	if len(rawResponse) == 0 {
 		err = errors.New("DeserializeInt32: nothing to decode")
@@ -265,7 +265,7 @@ func DeserializeEdges(rawResponse string) (Edges, error) {
 	if rawResponse == "" {
 		return response, nil
 	}
-	err := json.Unmarshal([]byte(rawResponse), &response)
+	err := json.Unmarshal(json.RawMessage(rawResponse), &response)
 	if err != nil {
 		return nil, err
 	}
@@ -276,7 +276,7 @@ func DeserializeGenericValue(rawResponse string) (response GenericValue, err err
 	if len(rawResponse) == 0 {
 		return
 	}
-	if err = json.Unmarshal([]byte(rawResponse), &response); err != nil {
+	if err = json.Unmarshal(json.RawMessage(rawResponse), &response); err != nil {
 		return
 	}
 	return
@@ -287,7 +287,7 @@ func DeserializeGenericValues(rawResponse string) (GenericValues, error) {
 	if rawResponse == "" {
 		return response, nil
 	}
-	err := json.Unmarshal([]byte(rawResponse), &response)
+	err := json.Unmarshal(json.RawMessage(rawResponse), &response)
 	if err != nil {
 		return nil, err
 	}
@@ -316,10 +316,10 @@ func ConvertToCleanEdges(edges Edges) []CleanEdge {
 	return responseEdges
 }
 
-func isEmptyResponse(rawResponse []byte) bool {
+func isEmptyResponse(rawResponse json.RawMessage) bool {
 	return len(rawResponse) == 0 || isNullResponse(rawResponse)
 }
 
-func isNullResponse(rawResponse []byte) bool {
+func isNullResponse(rawResponse json.RawMessage) bool {
 	return len(rawResponse) == 4 && string(rawResponse) == "null"
 }
